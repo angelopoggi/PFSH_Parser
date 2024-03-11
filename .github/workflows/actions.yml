@@ -1,8 +1,8 @@
-name: run main.py
+name: run PFSH-Parsher
 
 on:
   schedule:
-    - cron: '0 0 * * 1' # At 00:00 on Monday
+    - cron: '0 0 * * *' # At 12AM Every Day
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9' # install the python version needed
+          python-version: '3.11' # install the python version needed
           
       - name: install python packages
         run: |
@@ -24,18 +24,10 @@ jobs:
           
       - name: execute py script # run main.py
         env:
-          SOME_SECRET: ${{ secrets.SOME_SECRET }}
+          PFSH_USERNAME: ${{ secrets.PFSH_USERNAME }}
+          PFSH_PASSWORD: ${{ secrets.PFSH_PASSWORD }}
+          HOST: ${{ secrets.HOST }}
+          LOG_FILE: ${{ secrets.LOG_FILE }}
+          LOCAL_FILE: ${{ secrets.LOCAL_FILE }}
+          REMOTE_FILE: ${{ secrets.REMOTE_FILE }}
         run: python main.py
-          
-      - name: commit files
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git diff-index --quiet HEAD || (git commit -a -m "updated logs" --allow-empty)
-          
-      - name: push changes
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main 

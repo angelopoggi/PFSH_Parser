@@ -1,34 +1,36 @@
-import logging
-import logging.handlers
-import os
+from pfsh_parser.sftp_engine import sftp_connect
+from pfsh_parser.csv_engine import daily_inventory_parser
+from pfsh_parser.creds import PFSH_USERNAME,PFSH_PASSWORD,HOST,LOCAL_FILE,REMOTE_FILE,LOG_FILE
+import time
 
-import requests
+#get latest file
+sftp_connect(host=HOST,
+             port=22,
+             username=PFSH_USERNAME,
+             password=PFSH_PASSWORD,
+             direction="pull",
+             remote_file=REMOTE_FILE,
+             local_file=f"{LOCAL_FILE}.csv")
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger_file_handler = logging.handlers.RotatingFileHandler(
-    "status.log",
-    maxBytes=1024 * 1024,
-    backupCount=1,
-    encoding="utf8",
-)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger_file_handler.setFormatter(formatter)
-logger.addHandler(logger_file_handler)
+#modify file for matrixify
+daily_inventory_parser(f"{LOCAL_FILE}.csv")
 
-try:
-    SOME_SECRET = os.environ["SOME_SECRET"]
-except KeyError:
-    SOME_SECRET = "Token not available!"
-    #logger.info("Token not available!")
-    #raise
+#Put modified file on sftp server
+time.sleep(1)
+sftp_connect(host=HOST,
+             port=22,
+             username=PFSH_USERNAME,
+             password=PFSH_PASSWORD,
+             direction="push",
+             local_file=f"{LOCAL_FILE}.csv",
+             remote_file=f"{REMOTE_FILE}")
 
-
-if __name__ == "__main__":
-    logger.info(f"Token value: {SOME_SECRET}")
-
-    r = requests.get('https://weather.talkpython.fm/api/weather/?city=Berlin&country=DE')
-    if r.status_code == 200:
-        data = r.json()
-        temperature = data["forecast"]["temp"]
-        logger.info(f'Weather in Berlin: {temperature}')
+#Put Logs on server
+time.sleep(1)
+sftp_connect(host=HOST,
+             port=22,
+             username=PFSH_USERNAME,
+             password=PFSH_PASSWORD,
+             direction="push",
+             local_file=LOG_FILE,
+             remote_file=f"Log_Files/{LOG_FILE}")
