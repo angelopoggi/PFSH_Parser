@@ -3,7 +3,7 @@ import pycountry
 def daily_inventory_parser(csv_file):
     header_mapper = {
         "AV": "Variant Inventory Qty",
-        "Item#": "Variant ID",
+        "Item#": "Item#",
         "Description": "Title",
         "Reference": None,
         "Manufacturer": "Vendor",
