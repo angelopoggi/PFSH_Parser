@@ -27,8 +27,11 @@ jobs:
         env:
           PFSH_USERNAME: ${{ secrets.PFSH_USERNAME }}
           PFSH_PASSWORD: ${{ secrets.PFSH_PASSWORD }}
-          HOST: ${{ secrets.HOST }}
-          LOG_FILE: ${{ secrets.LOG_FILE }}
-          LOCAL_FILE: ${{ secrets.LOCAL_FILE }}
-          REMOTE_FILE: ${{ secrets.REMOTE_FILE }}
+          HOST: ${{ env.HOST }}
+          LOG_FILE: ${{ env.LOG_FILE }}
+          BASE_INVENTORY_FILE: ${{ env.BASE_INVENTORY_FILE }}
+          MASTER_INVENTORY_FILE: ${{ env.MASTER_INVENTORY_FILE }}
+          UPDATED_INVENTORY_FILE: ${{ env.UPDATED_INVENTORY_FILE }}
+          BASE_ORDERS_FILE: ${{ env.BASE_ORDERS_FILE }}
+          UPDATED_ORDERS_FILE: ${{ env.UPDATED_ORDERS_FILE }}
         run: python main.py
