@@ -3,7 +3,7 @@ name: run PFSH-Parsher
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # At 12AM Every Day
+    - cron: '0 * * * *'
 
 jobs:
   build:
