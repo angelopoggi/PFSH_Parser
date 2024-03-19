@@ -46,7 +46,7 @@ sftp_connect(
     username=username,
     password=password,
     direction="push",
-    local_file=f"tmp/{UPDATED_INVENTORY_FILE}",
+    local_file=f"files/tmp/{UPDATED_INVENTORY_FILE}",
     remote_file=f"imports/inventory/{UPDATED_INVENTORY_FILE}",
 )
 logger.log("GRABBING EXPORTED ORDERS FILE FROM SFTP")
@@ -58,12 +58,12 @@ sftp_connect(
     username=username,
     password=password,
     direction="pull",
-    local_file=f"tmp/{BASE_ORDERS_FILE}",
+    local_file=f"files/tmp/{BASE_ORDERS_FILE}",
     remote_file=f"exports/orders/{BASE_ORDERS_FILE}",
 )
 logger.log(f"PARSE AND MODIFY ORDERS FILE")
 # parse orders
-order_parser(f"tmp/{BASE_ORDERS_FILE}")
+order_parser(f"files/tmp/{BASE_ORDERS_FILE}")
 logger.log(f"PUSH MODIFIED ORDERS FILE TO SFTP")
 # push new orders
 time.sleep(1)
@@ -73,6 +73,6 @@ sftp_connect(
     username=username,
     password=password,
     direction="push",
-    local_file=f"tmp/{UPDATED_ORDERS_FILE}",
+    local_file=f"files/tmp/{UPDATED_ORDERS_FILE}",
     remote_file=f"Orders/JCBEAN_ORDERS.csv",
 )

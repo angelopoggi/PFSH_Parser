@@ -54,7 +54,7 @@ def daily_inventory_parser(csv_file, master_file):
 
     # Save the updated master file to a new file
     logger.log("INVENTORY: GENERATING NEW FILE")
-    updated_final_cleaned_path = "tmp/updated_master_inventory.xlsx"
+    updated_final_cleaned_path = "files/tmp/updated_master_inventory.xlsx"
     final_cleaned_df.to_excel(updated_final_cleaned_path, index=False)
 
 
@@ -92,7 +92,7 @@ def order_parser(csv_file):
     df["ORDUNIT"] = "EA"
 
     logger.log("ORDERS: GENERATING NEW ORDERS FILE")
-    output_path = "tmp/adjusted_orders_file.csv"
+    output_path = "files/tmp/adjusted_orders_file.csv"
     df.to_csv(output_path, index=False)
 
 
