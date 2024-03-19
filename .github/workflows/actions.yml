@@ -1,4 +1,4 @@
-name: run PFSH-Parsher
+name: run PFSH-Parser
 
 on:
   workflow_dispatch:
