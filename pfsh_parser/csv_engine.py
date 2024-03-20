@@ -74,7 +74,6 @@ def order_parser(csv_file):
         "SHPCOUNTRY(3)": "Shipping: Country Code",
         "ITEM": "Metafield: custom.item_number [number_integer]",
         "QTYORDERED": "Line: Quantity",
-        "ORDUNIT": "Price: Total",
         "PRIUNTPRC": "Line: Variant Cost",
     }
 
@@ -102,11 +101,18 @@ def order_parser(csv_file):
 
     # Remove 'Line: Name' as it's no longer needed
     if "Line: Name" in merged_df.columns:
-        merged_df.drop(columns=["Line: Name"], inplace=True)
+        merged_df.drop(
+            columns=[
+                "Line: Name",
+                "Line: Type",
+            ],
+            inplace=True,
+        )
 
     # Reverse mapping for final header names
     final_headers = {v: k for k, v in header_mapper.items()}
     merged_df.rename(columns=final_headers, inplace=True)
+    merged_df["ORDUNIT"] = "EA"
 
     logger.log("ORDERS: GENERATING NEW ORDERS FILE")
     output_path = "files/tmp/adjusted_orders_file.csv"
