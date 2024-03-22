@@ -121,87 +121,25 @@ def order_parser(csv_file):
     logger.log(f"ORDERS: FILE SAVED TO {output_path}")
 
 
-# def order_parser(csv_file):
-#     # Initialize the logger
-#     logger = LogEngine(file_path=LOG_FILE)
-#
-#     # Original mapping of headers to be replaced
+# def shipping_parser(csv_file):
 #     header_mapper = {
-#         "PONUMBER": "ID",
-#         "SHPNAME(30)": "Shipping: Name",
-#         "SHPADDR1(30) - DO NOT LEAVE BLANK": "Shipping: Address 1",
-#         "SHPADDR2(30)": "Shipping: Address 2",
-#         "SHPCITY(16)": "Shipping: City",
-#         "SHPSTATE(2)": "Shipping: Province Code",
-#         "SHPZIP(10)": "Shipping: Zip",
-#         "SHPCOUNTRY(3)": "Shipping: Country Code",
-#         # SHIPVIA mapping will be handled after identifying the corresponding shipping line
-#         "ITEM": "Metafield: custom.item_number [number_integer]",
-#         "QTYORDERED": "Line: Quantity",
-#         "ORDUNIT": "Price: Total",
-#         "PRIUNTPRC": "Line: Variant Cost",
+#         "VENDOR": None,
+#         "PO NUMBER": None,
+#         "VEND ORDNUM": None,
+#         "Order Date": None,
+#         "SKU": None,
+#         "QTY ORD": None,
+#         "QTY SHP": None,
+#         "INV NUMBER": None,
+#         "Inv Date": None,
+#         "TRACKINGNUM": None,
+#         "Status": None,
+#         "ItemExt": None,
+#         "HandChg": None,
+#         "Shipping": None,
+#         "InvTot": None,
+#         "Ship_Date": None
 #     }
-#
-#     logger.log("ORDERS: LOADING EXPORTED CSV FILE")
-#     df = pd.read_csv(csv_file)
-#
-#     logger.log("ORDERS: MAPPING COLUMNS")
-#     # Map the CSV file headers to the new headers before separating line items and shipping lines
-#     new_columns = {col: header_mapper.get(col, col) for col in df.columns}
-#     df.rename(columns=new_columns, inplace=True)
-#
-#     # Now separate line items and shipping lines after column names have been updated
-#     line_items_df = df[df["Line: Type"] != "Shipping Line"].copy()
-#     shipping_lines_df = df[df["Line: Type"] == "Shipping Line"].copy()
-#
-#     # Extract and map SHIPVIA from shipping lines to line items based on ID
-#     ship_via_mapping = shipping_lines_df[["ID", "Line: Name"]].rename(columns={"Line: Name": "SHIPVIA"})
-#     merged_df = line_items_df.merge(ship_via_mapping, on="ID", how="left")
-#
-#     # Assuming ORDUNIT should be set globally and not per-line. Adjust as necessary.
-#     merged_df["ORDUNIT"] = "EA"
-#
-#     logger.log("ORDERS: GENERATING NEW ORDERS FILE")
-#     output_path = "files/tmp/adjusted_orders_file.csv"
-#     merged_df.to_csv(output_path, index=False)
-#
-#     logger.log(f"ORDERS: FILE SAVED TO {output_path}")
-# def order_parser(csv_file):
-#     # Original mapping of headers to be replaced
-#     logger = LogEngine(file_path=LOG_FILE)
-#     header_mapper = {
-#         "PONUMBER": "ID",
-#         "SHPNAME(30)": "Shipping: Name",
-#         "SHPADDR1(30) - DO NOT LEAVE BLANK": "Shipping: Address 1",
-#         "SHPADDR2(30)": "Shipping: Address 2",
-#         "SHPCITY(16)": "Shipping: City",
-#         "SHPSTATE(2)": "Shipping: Province Code",
-#         "SHPZIP(10)": "Shipping: Zip",
-#         "SHPCOUNTRY(3)": "Shipping: Country Code",
-#         "SHIPVIA": "Line: Name",
-#         "ITEM": "Metafield: custom.item_number [number_integer]",
-#         "QTYORDERED": "Line: Quantity",
-#         "ORDUNIT": "Price: Total",
-#         "PRIUNTPRC": "Line: Variant Cost",
-#     }
-#
-#     logger.log("ORDERS: LOADING EXPORTED CSV FILE")
-#     # Read the CSV file into a DataFrame
-#     df = pd.read_csv(csv_file)
-#
-#     logger.log("ORDERS: DROPPING SHIPPING LINE COLUMN")
-#     if "Line: Type" in df.columns:
-#         df = df[df["Line: Type"] != "Shipping Line"]
-#         df.drop(columns=["Line: Type"], inplace=True)
-#     logger.log("ORDERS: MAPPING COLUMNS")
-#     reverse_mapper = {value: key for key, value in header_mapper.items() if value}
-#     new_columns = {col: reverse_mapper.get(col, col) for col in df.columns}
-#     df.rename(columns=new_columns, inplace=True)
-#     df["ORDUNIT"] = "EA"
-#
-#     logger.log("ORDERS: GENERATING NEW ORDERS FILE")
-#     output_path = "files/tmp/adjusted_orders_file.csv"
-#     df.to_csv(output_path, index=False)
 
 
 def calculate_sale_price(retail_price, percent_off):
