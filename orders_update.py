@@ -6,9 +6,6 @@ from pfsh_parser.creds import (
     PFSH_USERNAME,
     PFSH_PASSWORD,
     HOST,
-    BASE_INVENTORY_FILE,
-    UPDATED_INVENTORY_FILE,
-    MASTER_INVENTORY_FILE,
     BASE_ORDERS_FILE,
     UPDATED_ORDERS_FILE,
     LOG_FILE,
@@ -20,7 +17,10 @@ username = PFSH_USERNAME
 password = PFSH_PASSWORD
 host = HOST
 
-ogger.log("GRABBING EXPORTED ORDERS FILE FROM SFTP")
+# LOCAL_FILE,REMOTE_FILE,LOG_FILE
+# get latest inventory File
+logger = LogEngine(file_path=LOG_FILE)
+logger.log("GRABBING EXPORTED ORDERS FILE FROM SFTP")
 # grab orders
 time.sleep(1)
 sftp_connect(
