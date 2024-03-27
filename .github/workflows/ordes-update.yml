@@ -1,0 +1,37 @@
+name: RUN ORDERS PARSER
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to github runner
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' # install the python version needed
+
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: execute py script # run main.py
+        env:
+          PFSH_USERNAME: ${{ secrets.PFSH_USERNAME }}
+          PFSH_PASSWORD: ${{ secrets.PFSH_PASSWORD }}
+          HOST: ${{ vars.HOST }}
+          LOG_FILE: ${{ vars.LOG_FILE }}
+          BASE_INVENTORY_FILE: ${{ vars.BASE_INVENTORY_FILE }}
+          MASTER_INVENTORY_FILE: ${{ vars.MASTER_INVENTORY_FILE }}
+          UPDATED_INVENTORY_FILE: ${{ vars.UPDATED_INVENTORY_FILE }}
+          BASE_ORDERS_FILE: ${{ vars.BASE_ORDERS_FILE }}
+          UPDATED_ORDERS_FILE: ${{ vars.UPDATED_ORDERS_FILE }}
+        run: python orders_update.py

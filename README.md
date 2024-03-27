@@ -1,12 +1,10 @@
-# Schedule a Python script with GitHub Actions
+# PFSH-Parser
 
-**Watch the video tutorial:**
+This script performs the following actions
+* Pulls data from Sheralven and parses it into a format that can be
+* read and used by the Matrifixy plugin
 
-[![Alt text](https://img.youtube.com/vi/PaGp7Vi5gfM/hqdefault.jpg)](https://youtu.be/PaGp7Vi5gfM)
 
-This example shows how to run a Python script as cron job with GitHub Actions. It calls an API once a week (could be any schedule you want), logs the response in `status.log`, and automatically pushes the changes to this repo.
-
-- Implement your script in `main.py`
-- Inspect and configure cron job in GitHub Action `.github/workflows/actions.yml`
-- It can install and use third party packages from `requirements.txt`
-- Secret environment variables can be used. Set secrets in Settings/Secrets/Actions -> 'New repository secret'. Use the same secret name inside `actions.yml` and `main.py`
+## Upgrade plans
+1 - Convert to an internal DB
+2 - Switch to API calls to depreceate SFTP module and Make calls direclty to shopify
