@@ -27,6 +27,7 @@ jobs:
         env:
           PFSH_USERNAME: ${{ secrets.PFSH_USERNAME }}
           PFSH_PASSWORD: ${{ secrets.PFSH_PASSWORD }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
           HOST: ${{ vars.HOST }}
           LOG_FILE: ${{ vars.LOG_FILE }}
           BASE_INVENTORY_FILE: ${{ vars.BASE_INVENTORY_FILE }}
@@ -34,4 +35,5 @@ jobs:
           UPDATED_INVENTORY_FILE: ${{ vars.UPDATED_INVENTORY_FILE }}
           BASE_ORDERS_FILE: ${{ vars.BASE_ORDERS_FILE }}
           UPDATED_ORDERS_FILE: ${{ vars.UPDATED_ORDERS_FILE }}
+          SHOP_NAME: ${{ vars.SHOP_NAME }}
         run: python inventory_update.py

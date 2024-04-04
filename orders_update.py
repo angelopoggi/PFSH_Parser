@@ -6,9 +6,10 @@ from pfsh_parser.creds import (
     PFSH_USERNAME,
     PFSH_PASSWORD,
     HOST,
-    BASE_ORDERS_FILE,
     UPDATED_ORDERS_FILE,
     LOG_FILE,
+    SHOP_NAME,
+    SHOPIFY_ACCESS_TOKEN,
 )
 
 import time
@@ -17,24 +18,9 @@ username = PFSH_USERNAME
 password = PFSH_PASSWORD
 host = HOST
 
-# LOCAL_FILE,REMOTE_FILE,LOG_FILE
-# get latest inventory File
 logger = LogEngine(file_path=LOG_FILE)
-logger.log("GRABBING EXPORTED ORDERS FILE FROM SFTP")
-# grab orders
-time.sleep(1)
-sftp_connect(
-    host=host,
-    port=22,
-    username=username,
-    password=password,
-    direction="pull",
-    local_file=f"files/tmp/{BASE_ORDERS_FILE}",
-    remote_file=f"exports/orders/{BASE_ORDERS_FILE}",
-)
-logger.log(f"PARSE AND MODIFY ORDERS FILE")
-# parse orders
-order_parser(f"files/tmp/{BASE_ORDERS_FILE}")
+logger.log(f"Fetching Orders from Shopify API")
+order_parser(SHOP_NAME, "unfulfilled", SHOPIFY_ACCESS_TOKEN)
 logger.log(f"PUSH MODIFIED ORDERS FILE TO SFTP")
 # push new orders
 time.sleep(1)

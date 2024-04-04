@@ -2,6 +2,11 @@ import pycountry
 import pandas as pd
 from pfsh_parser.log_engine import LogEngine
 from pfsh_parser.creds import LOG_FILE
+from pfsh_parser.shopify_engine import (
+    fetch_orders,
+    fetch_product,
+    get_product_metafields,
+)
 
 
 def daily_inventory_parser(csv_file, master_file):
@@ -58,88 +63,64 @@ def daily_inventory_parser(csv_file, master_file):
     final_cleaned_df.to_excel(updated_final_cleaned_path, index=False)
 
 
-def order_parser(csv_file):
-    # Initialize the logger
+def order_parser(shop_name, status, access_token):
     logger = LogEngine(file_path=LOG_FILE)
+    logger.log("Fetching Orders from API endpoint")
+    orders = fetch_orders(shop_name, status, access_token)
+    order_list = []
+    column_names = [
+        "PONUMBER",
+        "ITEM",
+        "QTYORDERED",
+        "ORDUNIT",
+        "SHPNAME(30)",
+        "SHPADDR1(30) - DO NOT LEAVE BLANK",
+        "SHPADDR2(30)",
+        "SHPCITY(16)",
+        "SHPSTATE(2)",
+        "SHPCOUNTRY(3)",
+        "SHPZIP(10)",
+    ]
 
-    # Original mapping of headers to be replaced
-    header_mapper = {
-        "PONUMBER": "ID",
-        "SHPNAME(30)": "Shipping: Name",
-        "SHPADDR1(30) - DO NOT LEAVE BLANK": "Shipping: Address 1",
-        "SHPADDR2(30)": "Shipping: Address 2",
-        "SHPCITY(16)": "Shipping: City",
-        "SHPSTATE(2)": "Shipping: Province Code",
-        "SHPZIP(10)": "Shipping: Zip",
-        "SHPCOUNTRY(3)": "Shipping: Country Code",
-        "ITEM": "Metafield: custom.item_number [number_integer]",
-        "QTYORDERED": "Line: Quantity",
-        "PRIUNTPRC": "Line: Variant Cost",
-    }
+    # Initialize the DataFrame with column names to ensure headers are always present
+    logger.log("Setting headers for CSV")
+    df = pd.DataFrame(columns=column_names)
+    for data in orders:
+        for fulfillment in data["fulfillments"]:
+            for line_item in fulfillment["line_items"]:
+                # get the sheravlen product ID
+                product_metafields = get_product_metafields(
+                    shop_name, access_token, line_item["id"]
+                )
+                if product_metafields:
+                    for item in product_metafields:
+                        if product_metafields.get("key") == "item_number":
+                            sheralven_item_id = product_metafields.get("value")
+                else:
+                    sheralven_item_id = "N/A"
+                order_list.append(
+                    {
+                        "PONUMBER": fulfillment["id"],
+                        "ITEM": sheralven_item_id,
+                        "QTYORDERED": line_item["quantity"],
+                        "ORDUNIT": "EA",
+                        "SHPNAME(30)": data["shipping_address"]["name"],
+                        "SHPADDR1(30) - DO NOT LEAVE BLANK": data["shipping_address"][
+                            "address1"
+                        ],
+                        "SHPADDR2(30)": data["shipping_address"]["address2"],
+                        "SHPCITY(16)": data["shipping_address"]["city"],
+                        "SHPSTATE(2)": data["shipping_address"]["province_code"],
+                        "SHPCOUNTRY(3)": data["shipping_address"]["country_code"],
+                        "SHPZIP(10)": data["shipping_address"]["zip"],
+                    }
+                )
 
-    logger.log("ORDERS: LOADING EXPORTED CSV FILE")
-    df = pd.read_csv(csv_file)
-
-    logger.log("ORDERS: MAPPING COLUMNS")
-    # Map the CSV file headers to the new headers before separating line items and shipping lines
-    new_columns = {col: header_mapper.get(col, col) for col in df.columns}
-    df.rename(columns=new_columns, inplace=True)
-
-    # Ensure ITEM column exists
-    if "Metafield: custom.item_number [number_integer]" not in df.columns:
-        df["Metafield: custom.item_number [number_integer]"] = None
-
-    # Now separate line items and shipping lines after column names have been updated
-    line_items_df = df[df["Line: Type"] != "Shipping Line"].copy()
-    shipping_lines_df = df[df["Line: Type"] == "Shipping Line"].copy()
-
-    # Extract and map SHIPVIA (Line: Name) from shipping lines to line items based on ID
-    ship_via_mapping = shipping_lines_df[["ID", "Line: Name"]].rename(
-        columns={"Line: Name": "SHIPVIA"}
-    )
-    merged_df = line_items_df.merge(ship_via_mapping, on="ID", how="left")
-
-    # Remove 'Line: Name' as it's no longer needed
-    if "Line: Name" in merged_df.columns:
-        merged_df.drop(
-            columns=[
-                "Line: Name",
-                "Line: Type",
-            ],
-            inplace=True,
-        )
-
-    # Reverse mapping for final header names
-    final_headers = {v: k for k, v in header_mapper.items()}
-    merged_df.rename(columns=final_headers, inplace=True)
-    merged_df["ORDUNIT"] = "EA"
-
-    logger.log("ORDERS: GENERATING NEW ORDERS FILE")
-    output_path = "files/tmp/adjusted_orders_file.csv"
-    merged_df.to_csv(output_path, index=False)
-
-    logger.log(f"ORDERS: FILE SAVED TO {output_path}")
-
-
-# def shipping_parser(csv_file):
-#     header_mapper = {
-#         "VENDOR": None,
-#         "PO NUMBER": None,
-#         "VEND ORDNUM": None,
-#         "Order Date": None,
-#         "SKU": None,
-#         "QTY ORD": None,
-#         "QTY SHP": None,
-#         "INV NUMBER": None,
-#         "Inv Date": None,
-#         "TRACKINGNUM": None,
-#         "Status": None,
-#         "ItemExt": None,
-#         "HandChg": None,
-#         "Shipping": None,
-#         "InvTot": None,
-#         "Ship_Date": None
-#     }
+    if order_list:  # Only update df if there are orders
+        logger.log("Orders found - flattening data")
+        df = pd.json_normalize(order_list)
+    logger.log("Writing CSV File with fetched order data")
+    df.to_csv("files/tmp/adjusted_orders_file.csv", index=False)
 
 
 def calculate_sale_price(retail_price, percent_off):

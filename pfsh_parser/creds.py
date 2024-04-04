@@ -10,5 +10,7 @@ try:
     BASE_ORDERS_FILE = os.environ["BASE_ORDERS_FILE"]
     UPDATED_ORDERS_FILE = os.environ["UPDATED_ORDERS_FILE"]
     LOG_FILE = os.environ["LOG_FILE"]
+    SHOP_NAME = os.environ["SHOP_NAME"]
+    SHOPIFY_ACCESS_TOKEN = os.environ["SHOPIFY_ACCESS_TOKEN"]
 except KeyError:
     raise Exception("VALUES NOT FOUND")
