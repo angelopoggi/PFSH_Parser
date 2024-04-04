@@ -31,5 +31,5 @@ sftp_connect(
     password=password,
     direction="push",
     local_file=f"files/tmp/{UPDATED_ORDERS_FILE}",
-    remote_file=f"Orders/JCBEAN_ORDERS.csv",
+    remote_file=f"Orders/POSTFORDERS.csv",
 )
