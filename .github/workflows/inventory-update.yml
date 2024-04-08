@@ -37,4 +37,5 @@ jobs:
           BASE_ORDERS_FILE: ${{ vars.BASE_ORDERS_FILE }}
           UPDATED_ORDERS_FILE: ${{ vars.UPDATED_ORDERS_FILE }}
           SHOP_NAME: ${{ vars.SHOP_NAME }}
+          SHIPPING_FILE: ${{ vars.SHIPPING_FILE }}
         run: python inventory_update.py
