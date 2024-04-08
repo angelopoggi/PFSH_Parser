@@ -92,7 +92,7 @@ class ShopifyClient:
         Raises:
             requests.HTTPError: If the request is not successful.
         """
-        response = self.session.get(f"{self.base_url}{uri}", verify=self.ssl_verify)
+        response = self.session.get(f"{self.base_url}{uri}")
         if response.ok:
             return response
         return response.raise_for_status()
