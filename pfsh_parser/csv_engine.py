@@ -2,11 +2,7 @@ import pycountry
 import pandas as pd
 from pfsh_parser.log_engine import LogEngine
 from pfsh_parser.creds import LOG_FILE
-from pfsh_parser.shopify_engine import (
-    fetch_orders,
-    fetch_product,
-    get_product_metafields,
-)
+from pfsh_parser.shopify_engine import ShopifyClient
 
 
 def daily_inventory_parser(csv_file, master_file):
@@ -66,7 +62,8 @@ def daily_inventory_parser(csv_file, master_file):
 def order_parser(shop_name, status, access_token):
     logger = LogEngine(file_path=LOG_FILE)
     logger.log("Fetching Orders from API endpoint")
-    orders = fetch_orders(shop_name, status, access_token)
+    sh_client = ShopifyClient(shop_name, access_token)
+    orders = sh_client.get_orders(status)
     order_list = []
     column_names = [
         "PONUMBER",
@@ -89,13 +86,11 @@ def order_parser(shop_name, status, access_token):
         for fulfillment in data["fulfillments"]:
             for line_item in fulfillment["line_items"]:
                 # get the sheravlen product ID
-                product_metafields = get_product_metafields(
-                    shop_name, access_token, line_item["id"]
-                )
+                product_metafields = sh_client.get_product_metafields(line_item["id"])
                 if product_metafields:
                     for item in product_metafields:
-                        if product_metafields.get("key") == "item_number":
-                            sheralven_item_id = product_metafields.get("value")
+                        if item.get("key") == "item_number":
+                            sheralven_item_id = item.get("value")
                 else:
                     sheralven_item_id = "N/A"
                 order_list.append(
@@ -123,9 +118,20 @@ def order_parser(shop_name, status, access_token):
     df.to_csv("files/tmp/adjusted_orders_file.csv", index=False)
 
 
-def calculate_sale_price(retail_price, percent_off):
-    discount_price = (int(retail_price) * int(percent_off)) // 100
-    return retail_price - discount_price
+def shipping_parser(csv_file, shop_name, access_token):
+    logger = LogEngine(file_path=LOG_FILE)
+    sh_client = ShopifyClient(shop_name, access_token)
+    # orders = sh_client.get_orders("fulfilled")
+    orders_df = pd.read_csv(f"files/tmp/{csv_file}")
+    for index, row in orders_df.iterrows():
+        fullfilment_id = sh_client.get_order_fulfillment_id(row["PO NUMBER"])
+        if fullfilment_id and row["TRACKINGNUM"]:
+            sh_client.update_fulfillment_shipping(fullfilment_id, row["TRACKINGNUM"])
+            logger.log(
+                f"updated tracking info for {fullfilment_id} with {row['TRACKINGNUM']}"
+            )
+        else:
+            logger.log("no tracking info for order")
 
 
 def country_to_iso(country_name):

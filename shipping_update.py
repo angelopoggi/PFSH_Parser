@@ -1,15 +1,15 @@
 from pfsh_parser.sftp_engine import sftp_connect
-from pfsh_parser.csv_engine import order_parser
+from pfsh_parser.csv_engine import shipping_parser
 from pfsh_parser.log_engine import LogEngine
 
 from pfsh_parser.creds import (
     PFSH_USERNAME,
     PFSH_PASSWORD,
     HOST,
-    UPDATED_ORDERS_FILE,
     LOG_FILE,
     SHOP_NAME,
     SHOPIFY_ACCESS_TOKEN,
+    SHIPPING_FILE,
 )
 
 import time
@@ -19,10 +19,8 @@ password = PFSH_PASSWORD
 host = HOST
 
 logger = LogEngine(file_path=LOG_FILE)
-logger.log(f"Fetching Orders from Shopify API")
-order_parser(SHOP_NAME, "unfulfilled", SHOPIFY_ACCESS_TOKEN)
-logger.log(f"PUSH MODIFIED ORDERS FILE TO SFTP")
-# push new orders
+logger.log(f"PULLING SHIPPING FILE")
+
 time.sleep(1)
 sftp_connect(
     host=host,
@@ -30,6 +28,9 @@ sftp_connect(
     username=username,
     password=password,
     direction="push",
-    local_file=f"files/tmp/{UPDATED_ORDERS_FILE}",
-    remote_file=f"Orders/POSTFORDERS.csv",
+    local_file=f"files/tmp/{SHIPPING_FILE}",
+    remote_file=f"Shipping/{SHIPPING_FILE}",
 )
+logger.log("UPDATING TRACKING INFORMATION FROM CSV TO SHOPIFY")
+# update Tracking information
+shipping_parser(f"files/tmp/{SHIPPING_FILE}", SHOP_NAME, SHOPIFY_ACCESS_TOKEN)
