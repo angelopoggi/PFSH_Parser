@@ -4,6 +4,8 @@ from pfsh_parser.log_engine import LogEngine
 from pfsh_parser.creds import LOG_FILE
 from pfsh_parser.shopify_engine import ShopifyClient
 
+import pprint
+
 
 def daily_inventory_parser(csv_file, master_file):
     # Mapping of CSV headers to master file headers
@@ -83,42 +85,40 @@ def order_parser(shop_name, status, access_token):
     logger.log("Setting headers for CSV")
     df = pd.DataFrame(columns=column_names)
     for data in orders:
-        print(data)
-        for fulfillment in data["fulfillments"]:
-            for line_item in fulfillment["line_items"]:
-                # get the sheravlen product ID
-                product_metafields = sh_client.get_product_metafields(line_item["id"])
-                print(product_metafields)
-                if product_metafields:
-                    for item in product_metafields:
-                        if item.get("key") == "item_number":
-                            sheralven_item_id = item.get("value")
-                else:
-                    sheralven_item_id = "N/A"
-                order_list.append(
-                    {
-                        "PONUMBER": fulfillment["id"],
-                        "ITEM": sheralven_item_id,
-                        "QTYORDERED": line_item["quantity"],
-                        "ORDUNIT": "EA",
-                        "SHPNAME(30)": data["shipping_address"]["name"],
-                        "SHPADDR1(30) - DO NOT LEAVE BLANK": data["shipping_address"][
-                            "address1"
-                        ],
-                        "SHPADDR2(30)": data["shipping_address"]["address2"],
-                        "SHPCITY(16)": data["shipping_address"]["city"],
-                        "SHPSTATE(2)": data["shipping_address"]["province_code"],
-                        "SHPCOUNTRY(3)": data["shipping_address"]["country_code"],
-                        "SHPZIP(10)": data["shipping_address"]["zip"],
-                    }
-                )
+        for line_item in data["line_items"]:
+            # get the sheravlen product ID
+            product_metafields = sh_client.get_product_metafields(
+                line_item["product_id"]
+            )
+            if product_metafields:
+                for item in product_metafields:
+                    if item.get("key") == "item_number":
+                        sheralven_item_id = item.get("value")
+            else:
+                sheralven_item_id = "N/A"
+            order_list.append(
+                {
+                    "PONUMBER": data["id"],
+                    "ITEM": sheralven_item_id,
+                    "QTYORDERED": line_item["fulfillable_quantity"],
+                    "ORDUNIT": "EA",
+                    "SHPNAME(30)": data["shipping_address"]["name"],
+                    "SHPADDR1(30) - DO NOT LEAVE BLANK": data["shipping_address"][
+                        "address1"
+                    ],
+                    "SHPADDR2(30)": data["shipping_address"]["address2"],
+                    "SHPCITY(16)": data["shipping_address"]["city"],
+                    "SHPSTATE(2)": data["shipping_address"]["province_code"],
+                    "SHPCOUNTRY(3)": data["shipping_address"]["country_code"],
+                    "SHPZIP(10)": data["shipping_address"]["zip"],
+                }
+            )
 
     if order_list:  # Only update df if there are orders
         logger.log("Orders found - flattening data")
         df = pd.json_normalize(order_list)
-        print(df)
-    logger.log("Writing CSV File with fetched order data")
-    df.to_csv("files/tmp/adjusted_orders_file.csv", index=False)
+        logger.log("Writing CSV File with fetched order data")
+        df.to_csv("files/tmp/adjusted_orders_file.csv", index=False)
 
 
 def shipping_parser(csv_file, shop_name, access_token):
