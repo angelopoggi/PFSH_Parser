@@ -83,10 +83,12 @@ def order_parser(shop_name, status, access_token):
     logger.log("Setting headers for CSV")
     df = pd.DataFrame(columns=column_names)
     for data in orders:
+        print(data)
         for fulfillment in data["fulfillments"]:
             for line_item in fulfillment["line_items"]:
                 # get the sheravlen product ID
                 product_metafields = sh_client.get_product_metafields(line_item["id"])
+                print(product_metafields)
                 if product_metafields:
                     for item in product_metafields:
                         if item.get("key") == "item_number":
@@ -114,6 +116,7 @@ def order_parser(shop_name, status, access_token):
     if order_list:  # Only update df if there are orders
         logger.log("Orders found - flattening data")
         df = pd.json_normalize(order_list)
+        print(df)
     logger.log("Writing CSV File with fetched order data")
     df.to_csv("files/tmp/adjusted_orders_file.csv", index=False)
 
