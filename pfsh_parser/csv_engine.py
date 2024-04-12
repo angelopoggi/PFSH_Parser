@@ -67,6 +67,7 @@ def order_parser(shop_name, status, access_token):
     sh_client = ShopifyClient(shop_name, access_token)
     orders = sh_client.get_orders(status)
     order_list = []
+    line_items_list = []
     column_names = [
         "PONUMBER",
         "ITEM",
@@ -79,17 +80,35 @@ def order_parser(shop_name, status, access_token):
         "SHPSTATE(2)",
         "SHPCOUNTRY(3)",
         "SHPZIP(10)",
+        "SHIPVIA",
+        "PRIUNTPRC",
     ]
 
     # Initialize the DataFrame with column names to ensure headers are always present
     logger.log("Setting headers for CSV")
     df = pd.DataFrame(columns=column_names)
     for data in orders:
+        # Create the fulfillment
+        fulfilment_order_id = sh_client.get_order_fulfillment_id(data["id"])
+        print("Fulfilment Order")
+        print(fulfilment_order_id)
+        sh_client.create_fulfillment(
+            data["id"],
+            location_id="88115937572",
+            line_items=data["line_items"],
+            notify_customer=False,
+        )
         for line_item in data["line_items"]:
+            # get the cost of the item
+            variant_cost = sh_client.get_variant_cost(
+                line_item["product_id"], line_item["sku"]
+            )
+
             # get the sheravlen product ID
             product_metafields = sh_client.get_product_metafields(
                 line_item["product_id"]
             )
+
             if product_metafields:
                 for item in product_metafields:
                     if item.get("key") == "item_number":
@@ -111,6 +130,8 @@ def order_parser(shop_name, status, access_token):
                     "SHPSTATE(2)": data["shipping_address"]["province_code"],
                     "SHPCOUNTRY(3)": data["shipping_address"]["country_code"],
                     "SHPZIP(10)": data["shipping_address"]["zip"],
+                    "SHIPVIA": data["shipping_lines"][0]["code"],
+                    "PRIUNTPRC": variant_cost,
                 }
             )
 

@@ -136,9 +136,61 @@ class ShopifyClient:
         else:
             return response.raise_for_status()
 
+    def create_fulfillment(
+        self,
+        order_id: str,
+        location_id: int,
+        line_items: list,
+        notify_customer: bool = False,
+    ) -> dict:
+        """
+        Create a fulfillment for an order.
+
+        Args:
+            order_id (str): The ID of the order to fulfill.
+            location_id (int): The ID of the location from which the items will be fulfilled.
+            line_items (list): A list of line item dictionaries to be fulfilled.
+            notify_customer (bool, optional): Whether to notify the customer via email. Defaults to False.
+
+        Returns:
+            dict: The JSON response from the Shopify API.
+        """
+        fulfillment_payload = {
+            "fulfillment": {
+                "location_id": location_id,
+                "notify_customer": notify_customer,
+                "line_items": line_items,
+            }
+        }
+        response = self._post(
+            f"/admin/api/2023-04/orders/{order_id}/fulfillments.json",
+            json_data=fulfillment_payload,
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return response.raise_for_status()
+
     def get_order_fulfillment_id(self, order_id):
         response = self._get(f"/admin/api/2023-01/orders/{order_id}.json")
         if response.status_code == 200:
             return response.json()["order"]["fulfillments"]
         else:
             return response.raise_for_status()
+
+    def get_variant_cost(self, item_id, item_sku):
+        # we need to get the iventory ID from the product ID
+        product_reponse = self._get(f"/admin/api/2024-04/products/{item_id}.json")
+        if not product_reponse.ok:
+            return product_reponse.raise_for_status()
+        for item in product_reponse.json()["product"]["variants"]:
+            if item["sku"] == item_sku:
+                inventory_id = item["inventory_item_id"]
+                break
+        inventory_response = self._get(
+            f"/admin/api/2024-04/inventory_items/{inventory_id}.json"
+        )
+        if inventory_response.ok:
+            return inventory_response.json()["inventory_item"]["cost"]
+        else:
+            return inventory_response.raise_for_status()
