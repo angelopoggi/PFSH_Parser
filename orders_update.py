@@ -20,7 +20,7 @@ host = HOST
 
 logger = LogEngine(file_path=LOG_FILE)
 logger.log(f"Fetching Orders from Shopify API")
-order_parser(SHOP_NAME, "unfulfilled", SHOPIFY_ACCESS_TOKEN)
+order_parser(SHOP_NAME, "unshipped", SHOPIFY_ACCESS_TOKEN)
 logger.log(f"PUSH MODIFIED ORDERS FILE TO SFTP")
 # push new orders
 time.sleep(1)

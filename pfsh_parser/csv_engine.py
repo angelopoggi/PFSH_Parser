@@ -65,6 +65,7 @@ def order_parser(shop_name, status, access_token):
     logger = LogEngine(file_path=LOG_FILE)
     logger.log("Fetching Orders from API endpoint")
     sh_client = ShopifyClient(shop_name, access_token)
+    # gets new orders
     orders = sh_client.get_orders(status)
     order_list = []
     line_items_list = []
@@ -89,15 +90,14 @@ def order_parser(shop_name, status, access_token):
     df = pd.DataFrame(columns=column_names)
     for data in orders:
         # Create the fulfillment
-        fulfilment_order_id = sh_client.get_order_fulfillment_id(data["id"])
+        # fulfilment_order_id = sh_client.get_order_fulfillment_id(data["id"])
+        fulfillment_order_id_list = sh_client.get_fulfillment_order_id(data["id"])
         print("Fulfilment Order")
-        print(fulfilment_order_id)
-        sh_client.create_fulfillment(
-            data["id"],
-            location_id="88115937572",
-            line_items=data["line_items"],
-            notify_customer=False,
-        )
+        print(f"order ID: {data['id']} fulfillment ID: {fulfillment_order_id_list}")
+
+        # creates the fulfillment
+        sh_client.create_fulfillment(fulfillment_order_id_list)
+
         for line_item in data["line_items"]:
             # get the cost of the item
             variant_cost = sh_client.get_variant_cost(

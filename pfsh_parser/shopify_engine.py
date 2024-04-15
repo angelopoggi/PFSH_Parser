@@ -1,6 +1,7 @@
 import requests
 import json
 from typing import Optional
+import pprint
 
 
 class ShopifyClient:
@@ -98,14 +99,14 @@ class ShopifyClient:
         return response.raise_for_status()
 
     def get_orders(self, status):
-        response = self._get(f"/admin/api/2023-01/orders.json?status={status}")
+        response = self._get(f"/admin/api/2024-04/orders.json?status={status}")
         if response.ok:
             return response.json()["orders"]
         else:
             return response.raise_for_status()
 
     def get_product(self, product_id):
-        response = self._get(f"/admin/api/2024-01/products/{product_id}.json")
+        response = self._get(f"/admin/api/2024-04/products/{product_id}.json")
         if response.status_code.ok:
             return response.json()
         else:
@@ -113,7 +114,7 @@ class ShopifyClient:
 
     def get_product_metafields(self, product_id):
         response = self._get(
-            f"/admin/api/2023-01/products/{product_id}/metafields.json"
+            f"/admin/api/2024-04/products/{product_id}/metafields.json"
         )
         if response.status_code == 200:
             return response.json()[
@@ -128,7 +129,7 @@ class ShopifyClient:
             {"notify_customer": "true", "tracking_info": {"number": tracking_number}}
         }
         response = self._post(
-            f"/admin/api/2024-01/fulfillments/{fulfillment_id}/update_tracking.json",
+            f"/admin/api/2024-04/fulfillments/{fulfillment_id}/update_tracking.json",
             data=json.dumps(shipping_payload),
         )
         if response.status_code == 200:
@@ -136,13 +137,19 @@ class ShopifyClient:
         else:
             return response.raise_for_status()
 
-    def create_fulfillment(
-        self,
-        order_id: str,
-        location_id: int,
-        line_items: list,
-        notify_customer: bool = False,
-    ) -> dict:
+    def _check_fulfillment_status(self, fulfillment_order_id):
+        response = self._get(
+            f"/admin/api/2024-04/fulfillment_orders/{fulfillment_order_id}.json"
+        )
+        if response.ok:
+            if response.json()["fulfillment_order"]["status"] == "closed":
+                return False
+            else:
+                return True
+        else:
+            response.raise_for_status()
+
+    def create_fulfillment(self, fulfillment_order_id_list) -> dict:
         """
         Create a fulfillment for an order.
 
@@ -155,26 +162,47 @@ class ShopifyClient:
         Returns:
             dict: The JSON response from the Shopify API.
         """
-        fulfillment_payload = {
-            "fulfillment": {
-                "location_id": location_id,
-                "notify_customer": notify_customer,
-                "line_items": line_items,
-            }
-        }
-        response = self._post(
-            f"/admin/api/2023-04/orders/{order_id}/fulfillments.json",
-            json_data=fulfillment_payload,
-        )
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return response.raise_for_status()
+        # check to make sure the fulfillment is open and not closed
+        for fulfillment_order_id in fulfillment_order_id_list:
+            fulfillment_status = self._check_fulfillment_status(fulfillment_order_id)
+            if fulfillment_status:
+                fulfillment_payload = {
+                    "fulfillment": {
+                        "line_items_by_fulfillment_order": [
+                            {"fulfillment_order_id": fulfillment_order_id}
+                        ]
+                    }
+                }
+                response = self._post(
+                    f"/admin/api/2024-04/fulfillments.json",
+                    json_data=fulfillment_payload,
+                )
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return response.raise_for_status()
+            else:
+                print("Fulfillment Order marked as closed - nothing to do")
 
-    def get_order_fulfillment_id(self, order_id):
-        response = self._get(f"/admin/api/2023-01/orders/{order_id}.json")
-        if response.status_code == 200:
-            return response.json()["order"]["fulfillments"]
+    # def get_order_fulfillment_id(self, order_id):
+    #     response = self._get(f"/admin/api/2024-04/orders/{order_id}.json")
+    #     pprint.pprint(response.json())
+    #     if response.ok:
+    #         for item in response.json()['fulfillment_orders']:
+    #             if item['status'] != "closed":
+    #                 return item['id']
+    #     else:
+    #         return response.raise_for_status()
+
+    def get_fulfillment_order_id(self, order_id):
+        response = self._get(
+            f"/admin/api/2024-04/orders/{order_id}/fulfillment_orders.json"
+        )
+        fulfillment_orders = []
+        if response.ok:
+            for item in response.json()["fulfillment_orders"]:
+                fulfillment_orders.append(item["id"])
+            return fulfillment_orders
         else:
             return response.raise_for_status()
 
