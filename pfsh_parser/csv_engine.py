@@ -92,9 +92,7 @@ def order_parser(shop_name, status, access_token):
         # Create the fulfillment
         # fulfilment_order_id = sh_client.get_order_fulfillment_id(data["id"])
         fulfillment_order_id_list = sh_client.get_fulfillment_order_id(data["id"])
-        print("Fulfilment Order")
         print(f"order ID: {data['id']} fulfillment ID: {fulfillment_order_id_list}")
-
         # creates the fulfillment
         sh_client.create_fulfillment(fulfillment_order_id_list)
 

@@ -168,9 +168,11 @@ class ShopifyClient:
             if fulfillment_status:
                 fulfillment_payload = {
                     "fulfillment": {
+                        "message": "Thank you for your order! Your order was received and we are currently processing it.",
+                        "notify_customer": True,
                         "line_items_by_fulfillment_order": [
                             {"fulfillment_order_id": fulfillment_order_id}
-                        ]
+                        ],
                     }
                 }
                 response = self._post(
@@ -182,7 +184,9 @@ class ShopifyClient:
                 else:
                     return response.raise_for_status()
             else:
-                print("Fulfillment Order marked as closed - nothing to do")
+                print(
+                    f"Fulfillment Order {fulfillment_order_id} marked as closed - nothing to do"
+                )
 
     # def get_order_fulfillment_id(self, order_id):
     #     response = self._get(f"/admin/api/2024-04/orders/{order_id}.json")
