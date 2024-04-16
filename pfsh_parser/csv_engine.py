@@ -117,7 +117,7 @@ def order_parser(shop_name, status, access_token):
                 {
                     "PONUMBER": data["id"],
                     "ITEM": sheralven_item_id,
-                    "QTYORDERED": line_item["fulfillable_quantity"],
+                    "QTYORDERED": line_item["quantity"],
                     "ORDUNIT": "EA",
                     "SHPNAME(30)": data["shipping_address"]["name"],
                     "SHPADDR1(30) - DO NOT LEAVE BLANK": data["shipping_address"][
