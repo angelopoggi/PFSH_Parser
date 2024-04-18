@@ -27,7 +27,7 @@ sftp_connect(
     port=22,
     username=username,
     password=password,
-    direction="push",
+    direction="pull",
     local_file=f"files/tmp/{SHIPPING_FILE}",
     remote_file=f"Shipping/{SHIPPING_FILE}",
 )

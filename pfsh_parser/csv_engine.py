@@ -144,16 +144,36 @@ def shipping_parser(csv_file, shop_name, access_token):
     logger = LogEngine(file_path=LOG_FILE)
     sh_client = ShopifyClient(shop_name, access_token)
     # orders = sh_client.get_orders("fulfilled")
-    orders_df = pd.read_csv(f"files/tmp/{csv_file}")
+    orders_df = pd.read_csv(f"{csv_file}")
+    orders_list = sh_client.get_unshipped_orders()
+    print(orders_list)
     for index, row in orders_df.iterrows():
-        fullfilment_id = sh_client.get_order_fulfillment_id(row["PO NUMBER"])
-        if fullfilment_id and row["TRACKINGNUM"]:
-            sh_client.update_fulfillment_shipping(fullfilment_id, row["TRACKINGNUM"])
-            logger.log(
-                f"updated tracking info for {fullfilment_id} with {row['TRACKINGNUM']}"
+        if (
+            row["Status"] == "SHIP_COMP"
+            and pd.notna(["TRACKINGNUM"])
+            and row["PO NUMBER"] in orders_list
+        ):
+            fullfilment_order_id_list = sh_client.get_fulfillment_order_id(
+                row["PO NUMBER"]
             )
+            # Grab the fulfillments
+            fulfillments = sh_client.get_fulfillments_by_order_id(row["PO NUMBER"])
+            if fulfillments is not None:
+                print(f"{fulfillments}")
+                for fulfillment in fulfillments:
+                    print(
+                        f"Pushing tracking number {row['TRACKINGNUM']} for Fulfillment {fulfillment}"
+                    )
+                    sh_client.update_fulfillment_shipping(
+                        fulfillment, row["TRACKINGNUM"]
+                    )
+                    # close the order
+                    print(
+                        f"Shipping was updated for order {row['PO NUMBER']} - marking as closed"
+                    )
+                    sh_client.close_order(row["PO NUMBER"])
         else:
-            logger.log("no tracking info for order")
+            print(f"Shipping status set to {row['Status']} for {row['PO NUMBER']}")
 
 
 def country_to_iso(country_name):
