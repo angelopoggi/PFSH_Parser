@@ -67,6 +67,9 @@ def order_parser(shop_name, status, access_token):
     sh_client = ShopifyClient(shop_name, access_token)
     # gets new orders
     orders = sh_client.get_orders(status)
+    if orders is None:
+        logger.log(f"No orders found with status {status}. Halting further action.")
+        return  # Exit the function if no orders are found
     order_list = []
     line_items_list = []
     column_names = [

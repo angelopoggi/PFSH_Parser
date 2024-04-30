@@ -1,7 +1,5 @@
 import requests
-import json
 from typing import Optional
-import pprint
 
 
 class ShopifyClient:
@@ -99,11 +97,41 @@ class ShopifyClient:
         return response.raise_for_status()
 
     def get_orders(self, status):
-        response = self._get(f"/admin/api/2024-04/orders.json?status={status}")
-        if response.ok:
-            return response.json()["orders"]
-        else:
-            return response.raise_for_status()
+        """
+        Retrieve orders based on their status.
+
+        Args:
+        status (str): The status of the orders to retrieve.
+
+        Returns:
+        list: A list of orders if any are found, None otherwise.
+        Raises:
+        Exception: If the HTTP request failed or if an unexpected error occurs.
+        """
+        try:
+            response = self._get(f"/admin/api/2024-04/orders.json?status={status}")
+            response.raise_for_status()  # This will raise an HTTPError if the HTTP request returned an unsuccessful status code.
+
+            if "application/json" in response.headers.get("Content-Type", ""):
+                data = response.json()
+                if data and "orders" in data:
+                    return data["orders"]
+                return None
+            else:
+                # Handle cases where the response doesn't contain JSON data
+                print(
+                    "Invalid content type received: %s",
+                    response.headers.get("Content-Type"),
+                )
+                return None
+        except requests.HTTPError as http_err:
+            print(
+                f"HTTP error occurred: {http_err}"
+            )  # Log the error or handle it otherwise
+            raise
+        except Exception as err:
+            print(f"An error occurred: {err}")
+            raise
 
     def get_unshipped_orders(self):
         orders = self.get_orders("open")
