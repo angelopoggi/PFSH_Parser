@@ -42,7 +42,7 @@ def daily_inventory_parser(csv_file, master_file):
     # Ensure "Variant Price" column has no null values and set them to 0.00
     if "Variant Price" in jcbeaninv_df.columns:
         logger.log("INVENTORY: FILLING MISSING PRICES WITH 0.00")
-        jcbeaninv_df["Variant Price"].fillna(0.00, inplace=True)
+        jcbeaninv_df["Variant Price"].fillna(0.00)
 
     # Load the master inventory file
     logger.log("INVENTORY: LOADING MASTER INVENTORY FILE")
