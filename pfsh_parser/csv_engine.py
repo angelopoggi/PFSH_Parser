@@ -33,13 +33,24 @@ def daily_inventory_parser(csv_file, master_file):
     logger.log("INVENTORY: MAPPING HEADER COLUMNS TO MATCH")
     jcbeaninv_df.columns = [header_mapper.get(col, col) for col in jcbeaninv_df.columns]
 
+    # Convert country names in the "Variant Country of Origin" column to ISO codes
+    if "Variant Country of Origin" in jcbeaninv_df.columns:
+        logger.log("INVENTORY: CONVERTING COUNTRY NAMES TO ISO CODES")
+        jcbeaninv_df["Variant Country of Origin"] = jcbeaninv_df[
+            "Variant Country of Origin"
+        ].apply(convert_country_name_to_iso)
+
+    # Ensure "Variant Price" column has no null values and set them to 0.00
+    if "Variant Price" in jcbeaninv_df.columns:
+        logger.log("INVENTORY: FILLING MISSING PRICES WITH 0.00")
+        jcbeaninv_df["Variant Price"].fillna(0.00, inplace=True)
+
     # Load the master inventory file
     logger.log("INVENTORY: LOADING MASTER INVENTORY FILE")
     final_cleaned_df = pd.read_excel(master_file, engine="openpyxl")
 
     # Merge the CSV data with the master file based on the item number,
-    # updating only if the CSV provides new
-    # information
+    # updating only if the CSV provides new information
     logger.log("INVENTORY: MERGING COLUMNS")
     for column in jcbeaninv_df.columns:
         if column in final_cleaned_df.columns and column != "Variant SKU [ID]":
@@ -179,9 +190,9 @@ def shipping_parser(csv_file, shop_name, access_token):
             print(f"Shipping status set to {row['Status']} for {row['PO NUMBER']}")
 
 
-def country_to_iso(country_name):
+def convert_country_name_to_iso(country_name):
     try:
-        return pycountry.countries.lookup(country_name).alpha_2
+        country = pycountry.countries.lookup(country_name)
+        return country.alpha_2
     except LookupError:
-        # Return the original country name if not found
-        return country_name
+        return country_name  # Return the original value if not found
