@@ -33,16 +33,9 @@ def daily_inventory_parser(csv_file, master_file):
     jcbeaninv_df.columns = [header_mapper.get(col, col) for col in jcbeaninv_df.columns]
 
     # Convert country names in the "Variant Country of Origin" column to ISO codes
-    if "Variant Country of Origin" in jcbeaninv_df.columns:
+    if "COO" in jcbeaninv_df.columns:
         logger.log("INVENTORY: CONVERTING COUNTRY NAMES TO ISO CODES")
-        jcbeaninv_df["Variant Country of Origin"] = jcbeaninv_df[
-            "Variant Country of Origin"
-        ].apply(convert_country_name_to_iso)
-
-    # Ensure "Variant Price" column has no null values and set them to 0.00
-    if "Variant Price" in jcbeaninv_df.columns:
-        logger.log("INVENTORY: FILLING MISSING PRICES WITH 0.00")
-        jcbeaninv_df["Variant Price"].fillna(0.00)
+        jcbeaninv_df["COO"] = jcbeaninv_df["COO"].apply(convert_country_name_to_iso)
 
     # Load the master inventory file
     logger.log("INVENTORY: LOADING MASTER INVENTORY FILE")
