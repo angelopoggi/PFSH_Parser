@@ -56,9 +56,9 @@ def daily_inventory_parser(csv_file, master_file):
     # Convert country names in the "Variant Country of Origin" column to ISO codes
     if "Variant Country of Origin" in final_cleaned_df.columns:
         logger.log("INVENTORY: CONVERTING COUNTRY NAMES TO ISO CODES")
-        jcbeaninv_df["COO"] = jcbeaninv_df["Variant Country of Origin"].apply(
-            convert_country_name_to_iso
-        )
+        final_cleaned_df["Variant Country of Origin"] = final_cleaned_df[
+            "Variant Country of Origin"
+        ].apply(convert_country_name_to_iso)
 
     # Save the updated master file to a new file
     logger.log("INVENTORY: GENERATING NEW FILE")
