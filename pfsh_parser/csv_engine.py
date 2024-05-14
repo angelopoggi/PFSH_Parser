@@ -12,7 +12,7 @@ def daily_inventory_parser(csv_file, master_file):
     logger = LogEngine(file_path=LOG_FILE)
     header_mapper = {
         "AV": "Variant Inventory Qty",
-        "Item#": "Metafield: custom.item_number [number_integer]",
+        "Item#": "Metafield: custom.item_number [single_line_text_field]",
         "Description": "Title",
         "Manufacturer": "Vendor",
         "Size": "Option1 Value",
