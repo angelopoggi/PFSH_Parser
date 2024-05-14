@@ -3,8 +3,7 @@ import pandas as pd
 from pfsh_parser.log_engine import LogEngine
 from pfsh_parser.creds import LOG_FILE
 from pfsh_parser.shopify_engine import ShopifyClient
-
-import pprint
+import pycountry
 
 
 def daily_inventory_parser(csv_file, master_file):
