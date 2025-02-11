@@ -1,10 +1,80 @@
 import pycountry
 import pandas as pd
 from pfsh_parser.log_engine import LogEngine
-from pfsh_parser.creds import LOG_FILE
+#from pfsh_parser.creds import LOG_FILE
 from pfsh_parser.shopify_engine import ShopifyClient
 import pycountry
 
+def build_matrixify_master_file(master_file):
+    try:
+        jcbeaninv_df = pd.read_excel(master_file, engine="openpyxl", sheet_name=1)
+        print("succesfully read file!")
+        print(jcbeaninv_df.columns.tolist())
+
+        header_map = {
+            "ITEM #": "Metafield: custom.item_number [single_line_text_field]",
+            "MFG UPC": "Variant Barcode",
+            "COO": "Variant Country of Origin",
+            "Weight": "Variant Weight",
+            "Length": "Metafield: custom.length [number_integer]",
+            "Width": "Metafield: custom.width [number_integer]",
+            "Height": "Metafield: custom.height [number_integer]",
+            "SIZE": "Option1 Value",
+            "Case Pack\nSize": "Metafield: custom.case_pack_size [number_integer]",
+            "Case \nWeight\n(LB)": "Metafield: custom.case_weight_pounds [number_integer]",
+            "Case \nLength\n(in)": "Metafield: custom.length_inches [number_integer]",
+            "Case\nHeight\n(in)": "Metafield: custom.height_inches [number_integer]",
+            "Case\nWidth\n(in)": "Metafield: custom.width_inches [number_integer]",
+            "DESCRIPTION": "Title", #name of product
+            "EXTENDED DESCRIPTION": "Body HTML", #actual of description of product
+            "KEY FEATURE1": "Metafield: custom.key_feature_1 [single_line_text_field]",
+            "KEY FEATURE2": "Metafield: custom.key_feature_2 [single_line_text_field]",
+            "KEY FEATURE3": "Metafield: custom.key_feature_3 [single_line_text_field]",
+            "SHERALVEN UPC": "Variant SKU [ID]",
+            "Gender Description": "Type",
+            "MSRP": "Variant Price",
+            "DIRECTIONS FOR USE": "Metafield: how_to_use [single_line_text_field]",
+            "Ingredients": "Metafield: custom.ingredients [single_line_text_field]",
+            "Main Picture Link Bottle & Box on White Background": "Image Src",
+            "TOP NOTES": "Metafield: custom.top_notes [single_line_text_field]",
+            "MIDDLE NOTES": "Metafield: custom.middle_notes [single_line_text_field]",
+            "BASE NOTES": "Metafield: custom.base_notes [single_line_text_field]",
+            "SCENT TYPE": "Metafield: custom.scent_type [single_line_text_field]",
+            "YEAR RELEASED": "Metafield: custom.year [number_integer]",
+            "Brand Name": "Vendor"
+        }
+
+        # Rename columns based on the header map
+        jcbeaninv_df = jcbeaninv_df.rename(columns=header_map)
+
+        # Add the 'Size' column and pre-populate with 'size'
+        print("adding in option1 name column with size value")
+        jcbeaninv_df['Option1 Name'] = 'Size'
+
+        # Add the 'Variant Inventory QTY' column and populate all values with 0
+        print("updating inventory qty to 0")
+        jcbeaninv_df['Variant Inventory QTY'] = 0
+
+        #change the name of the country to two letter code
+        print("trying to update country to two letter code")
+        jcbeaninv_df['Variant Country of Origin'] = jcbeaninv_df['Variant Country of Origin'].apply(convert_country_name_to_iso)
+
+        #remove empty rows wthout any item numbers as we 100% need these to send to drop shipper
+        print('Removing rows without Item #')
+        jcbeaninv_df = jcbeaninv_df.dropna(subset=['Metafield: custom.item_number [single_line_text_field]'])
+        #remove items without a price
+        print('Removing rows without a price')
+        jcbeaninv_df = jcbeaninv_df.dropna(subset=['Variant Price'])
+        print('Removing Unamed empty columsn')
+        jcbeaninv_df = jcbeaninv_df.loc[:, ~jcbeaninv_df.columns.str.contains('^Unnamed')]
+
+        # Save the updated dataframe to a new CSV file
+        output_file = "files/tmp/updated_inventory.xlsx"
+        jcbeaninv_df.to_excel(output_file, index=False)
+
+        print(f"Updated CSV file saved as {output_file}")
+    except Exception as e:
+        print(e)
 
 def daily_inventory_parser(csv_file, master_file):
     # Mapping of CSV headers to master file headers
@@ -189,4 +259,8 @@ def convert_country_name_to_iso(country_name):
         country = pycountry.countries.lookup(country_name)
         return country.alpha_2
     except LookupError:
-        return country_name  # Return the original value if not found
+        return "" # Return an empty string if not found
+
+def clean_column_names(columns):
+    """Clean column names by converting to lowercase and removing unwanted characters."""
+    return [col.strip().lower().replace("\n", "").replace("\r", "").replace("\t", "") for col in columns]
