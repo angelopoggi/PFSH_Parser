@@ -18,8 +18,9 @@ import os
 username = PFSH_USERNAME
 password = PFSH_PASSWORD
 host = HOST
+log_file = LOG_FILE
 
-logger = LogEngine(file_path=LOG_FILE)
+logger = LogEngine(file_path=log_file)
 logger.log(f"Fetching Orders from Shopify API")
 order_parser(SHOP_NAME, "open", SHOPIFY_ACCESS_TOKEN)
 logger.log(f"PUSH MODIFIED ORDERS FILE TO SFTP")
