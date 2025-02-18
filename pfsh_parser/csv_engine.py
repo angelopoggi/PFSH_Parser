@@ -1,8 +1,9 @@
 import pycountry
 import pandas as pd
 from pfsh_parser.log_engine import LogEngine
-from pfsh_parser.creds import LOG_FILE
+from pfsh_parser.creds import LOG_FILE, EMAIL_SENDER, EMAIL_PASSWORD, RECIPIENT_LIST, EMAIL_SERVER, EMAIL_PORT
 from pfsh_parser.shopify_engine import ShopifyClient
+from pfsh_parser.smtp_engine import EmailSender
 import pycountry
 
 def build_matrixify_master_file(master_file):
@@ -136,7 +137,7 @@ def daily_inventory_parser(csv_file, master_file):
     final_cleaned_df.to_excel(updated_final_cleaned_path, index=False)
 
 
-def order_parser(shop_name, status, access_token):
+def order_parser(shop_name, status, access_token,):
     logger = LogEngine(file_path=LOG_FILE)
     logger.log("Fetching Orders from API endpoint")
     sh_client = ShopifyClient(shop_name, access_token)
@@ -147,6 +148,9 @@ def order_parser(shop_name, status, access_token):
         return  # Exit the function if no orders are found
     order_list = []
     line_items_list = []
+    risky_order_dict = {
+        "orders": []
+    }
     column_names = [
         "PONUMBER",
         "ITEM",
@@ -167,8 +171,18 @@ def order_parser(shop_name, status, access_token):
     logger.log("Setting headers for CSV")
     df = pd.DataFrame(columns=column_names)
     for data in orders:
+        # Check the Order Risk
+        order_risk = sh_client.get_order_risk_number(data['id'])
+        if order_risk >= .5:
+            risky_order_dict['orders'].append(
+                {
+                    "id": data['id'],
+                    "link": f"https://{shop_name}.myshopify.com/admin/orders/{data['id']}"
+                }
+            )
+            #skip this order
+            continue
         # Create the fulfillment
-        # fulfilment_order_id = sh_client.get_order_fulfillment_id(data["id"])
         fulfillment_order_id_list = sh_client.get_fulfillment_order_id(data["id"])
         print(f"order ID: {data['id']} fulfillment ID: {fulfillment_order_id_list}")
         # creates the fulfillment
@@ -210,7 +224,23 @@ def order_parser(shop_name, status, access_token):
                     "PRIUNTPRC": variant_cost,
                 }
             )
-
+    # SEND email for risky orders
+    if risky_order_dict['orders']:
+        email_sender = EmailSender(
+            smtp_server=EMAIL_SERVER,
+            smtp_port=EMAIL_PORT,
+            username=EMAIL_SENDER,
+            password=EMAIL_PASSWORD,
+            template_dir="pfsh_parser/templates"
+        )
+        emails_list = [email.strip() for email in RECIPIENT_LIST.split(",") if email.strip()]
+        email_sender.send_template_email(
+            subject="FRADULENT ORDERS FOUND",
+            sender=EMAIL_SENDER,
+            recipients=emails_list,
+            template_name="risky_orders_email.html",
+            context=risky_order_dict
+        )
     if order_list:  # Only update df if there are orders
         logger.log("Orders found - flattening data")
         df = pd.json_normalize(order_list)

@@ -293,3 +293,17 @@ class ShopifyClient:
             return inventory_response.json()["inventory_item"]["cost"]
         else:
             return inventory_response.raise_for_status()
+
+    def get_order_risk(self, order_id):
+        response = self._get(f"/admin/api/2024-04/orders/{order_id}/risks.json")
+        if response.ok:
+            return response.json()
+        else:
+            return response.raise_for_status()
+
+    def get_order_risk_number(self, order_id):
+        response = self._get(f"/admin/api/2024-04/orders/{order_id}/risks.json")
+        if response.ok:
+            return (response.json()["risks"]['score'])
+        else:
+            return response.raise_for_status()

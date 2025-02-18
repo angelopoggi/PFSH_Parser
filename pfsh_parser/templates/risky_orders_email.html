@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fraudulent Orders Review</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border: 1px solid #dddddd;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <p>These open orders have been found to be fraudulent - please manually review:</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>{{ order.id }}</td>
+        <td><a href="{{ order.link }}" target="_blank">View Order</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
