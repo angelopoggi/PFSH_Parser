@@ -304,6 +304,6 @@ class ShopifyClient:
     def get_order_risk_number(self, order_id):
         response = self._get(f"/admin/api/2024-04/orders/{order_id}/risks.json")
         if response.ok:
-            return (response.json()["risks"]['score'])
+            return response.json()["risks"][0]["score"]
         else:
             return response.raise_for_status()
