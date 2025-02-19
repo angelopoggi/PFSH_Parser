@@ -4,7 +4,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 class EmailSender:
-    def __init__(self, smtp_server: str, smtp_port: int, username: str, password: str, template_dir: str = "templates"):
+    def __init__(
+        self,
+        smtp_server: str,
+        smtp_port: int,
+        username: str,
+        password: str,
+        template_dir: str = "templates",
+    ):
         """
         Initialize the EmailSender with SMTP settings and template directory.
 
@@ -20,7 +27,7 @@ class EmailSender:
         self.password = password
         self.env = Environment(
             loader=FileSystemLoader(template_dir),
-            autoescape=select_autoescape(['html', 'xml'])
+            autoescape=select_autoescape(["html", "xml"]),
         )
 
     def render_template(self, template_name: str, context: dict) -> str:
@@ -34,7 +41,9 @@ class EmailSender:
         template = self.env.get_template(template_name)
         return template.render(context)
 
-    def send_email(self, subject: str, sender: str, recipients: list, body: str, html: bool = False) -> None:
+    def send_email(
+        self, subject: str, sender: str, recipients: list, body: str, html: bool = False
+    ) -> None:
         """
         Send an email using the SMTP server settings.
 
@@ -47,9 +56,9 @@ class EmailSender:
         # Choose MIME subtype
         mime_subtype = "html" if html else "plain"
         msg = MIMEText(body, mime_subtype)
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = ", ".join(recipients)
+        msg["Subject"] = subject
+        msg["From"] = sender
+        msg["To"] = ", ".join(recipients)
 
         try:
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
@@ -58,12 +67,18 @@ class EmailSender:
                 server.ehlo()
                 server.login(self.username, self.password)
                 server.sendmail(sender, recipients, msg.as_string())
-            print("Email sent successfully!")
+            print(f"Email sent successfully to the following recipients {recipients}")
         except Exception as e:
             print(f"Failed to send email: {e}")
 
-    def send_template_email(self, subject: str, sender: str, recipients: list, template_name: str,
-                            context: dict) -> None:
+    def send_template_email(
+        self,
+        subject: str,
+        sender: str,
+        recipients: list,
+        template_name: str,
+        context: dict,
+    ) -> None:
         """
         Render a Jinja template and send it as an email.
 
