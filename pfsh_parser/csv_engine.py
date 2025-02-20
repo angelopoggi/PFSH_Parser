@@ -174,10 +174,11 @@ def order_parser(shop_name, status, access_token,):
         # Check the Order Risk
         order_risk = sh_client.get_order_risk_number(data['id'])
         if order_risk >= .5:
+            #probably shouldn't link the store id like this
             risky_order_dict['orders'].append(
                 {
                     "id": data['id'],
-                    "link": f"https://{shop_name}.myshopify.com/admin/orders/{data['id']}"
+                    "link": f"https://admin.shopify.com/store/2b6816-2/orders/{data['id']}"
                 }
             )
             #skip this order
